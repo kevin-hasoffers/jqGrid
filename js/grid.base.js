@@ -1374,7 +1374,7 @@ $.fn.jqGrid = function( pin ) {
 				F = f = reader(frd);
 			}
 			if( ts.p.keyIndex===false ) {
-				idn = $.isFunction(dReader.id) ? dReader.id.call(ts, data) : dReader.id; 
+				idn = $.isFunction(dReader.id) ? dReader.id.call(ts, data) : dReader.id;
 			} else {
 				idn = ts.p.keyIndex;
 			}
@@ -1405,6 +1405,9 @@ $.fn.jqGrid = function( pin ) {
 					}
 				}
 				idr  = ts.p.idPrefix + idr;
+				// KH added to allow specific row ids
+				if (cur.rowid) idr = cur.rowid;
+				//end addition
 				altr = rcnt === 1 ? 0 : rcnt;
 				cn1 = (altr+i)%2 == 1 ? cn : '';
 				var iStartTrTag = rowData.length;
