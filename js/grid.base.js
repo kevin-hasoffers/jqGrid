@@ -759,19 +759,56 @@ $.fn.jqGrid = function( pin ) {
 			headers:[],
 			cols:[],
 			footers: [],
+			// KH modified method to allow for expanding last column 05-17-2012
 			dragStart: function(i,x,y) {
-				this.resizing = { idx: i, startX: x.clientX, sOL : y[0]};
+				this.resizing = { idx: i, startX: x.clientX, sOL : y[0] };
 				this.hDiv.style.cursor = "col-resize";
 				this.curGbox = $("#rs_m"+$.jgrid.jqID(p.id),"#gbox_"+$.jgrid.jqID(p.id));
 				this.curGbox.css({display:"block",left:y[0],top:y[1],height:y[2]});
+				
+				if (i === this.headers.length - 1)
+				{
+					var h = this.headers[i] ;
+					
+					var mainContainer = $(h.el).parents('div.data-grid'),
+						mcWidth = mainContainer.width(),
+						tblWidth = $(h.el).parents('table').width(),
+						wDiff, scPos, main = $('section#main');
+					
+					$(h.el).after('<th id="last-resize-spacer" style="width:300px;"></th>');
+					var w = tblWidth + 300;
+					scPos = main.scrollLeft();
+					mainContainer.width(w);
+					main.scrollLeft(this.curGbox.position().left - h.width);
+					
+					wDiff = (main.scrollLeft() - scPos) - (tblWidth - mcWidth) - mainContainer.scrollLeft();
+					$(h.el).parents('table').width(w + 5);
+					$(h.el).parents('div.ui-jqgrid-hdiv').width(w);
+					$("#gbox_"+$.jgrid.jqID(p.id)).width(w);
+					this.resizing.main = {container:mainContainer,owidth:mcWidth, wDiff:wDiff};
+					// find header row if it exists
+					var head = mainContainer.parents('.block-container').siblings('div.headblock');
+					if (head.length == 1)
+					{
+						this.resizing.main.head = {container:head,owidth:head.width()} ;
+						head.width(tblWidth - 20);
+					}
+				}
+				
 				$(ts).triggerHandler("jqGridResizeStart", [x, i]);
 				if($.isFunction(p.resizeStart)) { p.resizeStart.call(this,x,i); }
 				document.onselectstart=function(){return false;};
 			},
+			// KH modified method to allow for expanding last column 05-17-2012
 			dragMove: function(x) {
+				
 				if(this.resizing) {
+					var h = this.headers[this.resizing.idx];
+					if (this.resizing.main)
+					{
+						x.clientX += this.resizing.main.wDiff;
+					}
 					var diff = x.clientX-this.resizing.startX,
-					h = this.headers[this.resizing.idx],
 					newWidth = p.direction === "ltr" ? h.width + diff : h.width - diff, hn, nWn;
 					if(newWidth > 33) {
 						this.curGbox.css({left:this.resizing.sOL+diff});
@@ -789,13 +826,25 @@ $.fn.jqGrid = function( pin ) {
 					}
 				}
 			},
+			// KH modified method to allow for expanding last column 05-17-2012
 			dragEnd: function() {
 				this.hDiv.style.cursor = "default";
 				if(this.resizing) {
+					if(this.resizing.main)
+					{
+						this.resizing.main.container.width(this.resizing.main.owidth);
+						this.resizing.main.container.scrollTo(this.resizing.main.container.width(), 0, {axis:'x'});
+						if (this.resizing.main.head)
+						{
+							this.resizing.main.head.container.width(this.resizing.main.head.owidth);
+						}
+					}
 					var idx = this.resizing.idx,
 					nw = this.headers[idx].newWidth || this.headers[idx].width;
 					nw = parseInt(nw,10);
 					this.resizing = false;
+					var h = this.headers[i] ;
+					$("#last-resize-spacer").remove();
 					$("#rs_m"+$.jgrid.jqID(p.id)).css("display","none");
 					p.colModel[idx].width = nw;
 					this.headers[idx].width = nw;
