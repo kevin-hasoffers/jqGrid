@@ -1970,7 +1970,8 @@ $.fn.jqGrid = function( pin ) {
 			$("#testpg").remove();
 			if(twd > 0) {
 				if(pginp !== "") { twd += 50; } //should be param
-				$("td#"+pgid+"_"+ts.p.pagerpos,"#"+pgcnt).width(twd);
+				 // KH removed, we don't need/want this
+				// $("td#"+pgid+"_"+ts.p.pagerpos,"#"+pgcnt).width(twd);
 			}
 			ts.p._nvtd = [];
 			ts.p._nvtd[0] = twd ? Math.floor((ts.p.width - twd)/2) : Math.floor(ts.p.width/3);
